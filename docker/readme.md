@@ -30,15 +30,16 @@
 docker run -d \
     --name nas-tools \
     --hostname nas-tools \
-    -p 3000:3000   `# 默认的webui控制端口` \
-    -v $(pwd)/config:/config  `# 冒号左边请修改为你想在主机上保存配置文件的路径` \
-    -v /你的媒体目录:/你想设置的容器内能见到的目录    `# 媒体目录，多个目录需要分别映射进来` \
-    -e PUID=0     `# 想切换为哪个用户来运行程序，该用户的uid，详见下方说明` \
-    -e PGID=0     `# 想切换为哪个用户来运行程序，该用户的gid，详见下方说明` \
-    -e UMASK=000  `# 掩码权限，默认000，可以考虑设置为022` \
-    -e NASTOOL_AUTO_UPDATE=false `# 如需在启动容器时自动升级程程序请设置为true` \
-    -e NASTOOL_CN_UPDATE=false `# 如果开启了容器启动自动升级程序，并且网络不太友好时，可以设置为true，会使用国内源进行软件更新` \
-    hsuyelin/nas-tools
+    -p 3000:3000 \
+    -v $(pwd)/config:/config \
+    -v /home/youruser/data:/data \
+    -e PUID=0 \
+    -e PGID=0 \
+    -e UMASK=000 \
+    -e NASTOOL_AUTO_UPDATE=true \
+    -e NASTOOL_CN_UPDATE=false \
+    -e REPO_URL=https://github.com/hiemas-a11y/nas-tools.git \
+    hiemas-a11y/nas-tools:latest
 ```
 
 如果你访问github的网络不太好，可以考虑在创建容器时增加设置一个环境变量`-e REPO_URL="https://ghproxy.com/https://github.com/hsuyelin/nas-tools.git" \`。
@@ -51,23 +52,29 @@ docker run -d \
 version: "3"
 services:
   nas-tools:
-    image: hsuyelin/nas-tools:latest
+    # 1. Your custom name (matches your GitHub username and repository)
+    image: hiemas-a11y/nas-tools:latest
+    # 2. This builds it locally on your server from your files
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - 3000:3000        # 默认的webui控制端口
+      - 3000:3000        
     volumes:
-      - ./config:/config   # 冒号左边请修改为你想保存配置的路径
-      - /你的媒体目录:/你想设置的容器内能见到的目录   # 媒体目录，多个目录需要分别映射进来，需要满足配置文件说明中的要求
+      - ./config:/config   
+      # 3. Unified path so hardlinks work instantly on your server
+      - /home/youruser/data:/data   
     environment: 
-      - PUID=0    # 想切换为哪个用户来运行程序，该用户的uid
-      - PGID=0    # 想切换为哪个用户来运行程序，该用户的gid
-      - UMASK=000 # 掩码权限，默认000，可以考虑设置为022
-      - NASTOOL_AUTO_UPDATE=false  # 如需在启动容器时自动升级程程序请设置为true
-      - NASTOOL_CN_UPDATE=false # 如果开启了容器启动自动升级程序，并且网络不太友好时，可以设置为true，会使用国内源进行软件更新
-     #- REPO_URL=https://ghproxy.com/https://github.com/hsuyelin/nas-tools.git  # 当你访问github网络很差时，可以考虑解释本行注释
+      - PUID=0    
+      - PGID=0    
+      - UMASK=000 
+      - NASTOOL_AUTO_UPDATE=true  
+      - NASTOOL_CN_UPDATE=false 
+      - REPO_URL=https://github.com/hiemas-a11y/nas-tools.git  
     restart: always
     network_mode: bridge
     hostname: nas-tools
-    container_name: nas-tools
+    container_name: nas-toolss
 ```
 
 ## 后续如何更新
@@ -90,4 +97,4 @@ services:
 
 参考下图，由imogel@telegram制作。
 
-![如何映射](https://github.com/hsuyelin/nas-tools/blob/master/docker/volume.png?raw=true)
+![如何映射]([https://github.com/hiemas-a11y/nas-tools/ )
