@@ -52,29 +52,28 @@ docker run -d \
 version: "3"
 services:
   nas-tools:
-    # 1. Your custom name (matches your GitHub username and repository)
-    image: hiemas-a11y/nas-tools:latest
-    # 2. This builds it locally on your server from your files
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Uses the core application runtime environment
+    image: hsuyelin/nas-tools:latest
     ports:
       - 3000:3000        
     volumes:
-      - ./config:/config   
-      # 3. Unified path so hardlinks work instantly on your server
-      - /home/youruser/data:/data   
+      # Persistent tracking directories
+      - /DATA/AppData/nas-tools/config:/config   
+      - /DATA:/data   
     environment: 
       - PUID=0    
       - PGID=0    
       - UMASK=000 
+      # Triggers the internal deployment engine to download your custom repo layout
       - NASTOOL_AUTO_UPDATE=true  
       - NASTOOL_CN_UPDATE=false 
-      - REPO_URL=https://github.com/hiemas-a11y/nas-tools.git  
+      # Links the container directly to your personal public repository source code
+      - REPO_URL=https://github.com/hiemas-a11y/nas-tools/
     restart: always
     network_mode: bridge
     hostname: nas-tools
-    container_name: nas-toolss
+    container_name: nas-tools
+
 ```
 
 ## 后续如何更新
