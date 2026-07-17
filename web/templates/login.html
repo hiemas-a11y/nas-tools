@@ -1,10 +1,10 @@
 {% import 'macro/svg.html' as SVG %}
 {% import 'macro/head.html' as HEAD %}
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   {{ HEAD.meta_link() }}
-  <title>登录 - NAStool</title>
+  <title>Sign In - NAStool</title>
   <!-- CSS files -->
   <link href="../static/css/tabler.min.css" rel="stylesheet"/>
   <link href="../static/css/style.css" rel="stylesheet"/>
@@ -20,20 +20,38 @@
         background-size: cover;
         background-position: center;
         background-repeat: repeat;
+        transition: all 0.5s ease-in-out;
     }
+    /* MoviePilot Smooth Glassmorphism Accent */
     .login_window {
-        background-color: rgba(255,255,255,0.5);
-        -webkit-backdrop-filter: blur(1rem);
-        backdrop-filter: blur(1rem)
+        background-color: rgba(15, 23, 42, 0.45) !important; /* Deep dark translucent background */
+        -webkit-backdrop-filter: blur(1.5rem);
+        backdrop-filter: blur(1.5rem);
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+        color: #f8fafc;
+    }
+    .login_window .form-label, .login_window .form-check-label {
+        color: #e2e8f0;
+    }
+    .login_window .form-control {
+        background-color: rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+    .login_window .form-control:focus {
+        border-color: #206bc4;
+        box-shadow: 0 0 0 0.25rem rgba(32, 107, 196, 0.25);
     }
     .image-desc {
-        background-color: rgba(34,34,34,.8);
+        background-color: rgba(15, 23, 42, 0.85);
         position: absolute;
         bottom: 20px;
         left: 20px;
-        padding: 5px;
+        padding: 8px 12px;
         z-index: 10;
         cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.05);
         margin-bottom: env(safe-area-inset-bottom) !important;
         margin-left: env(safe-area-inset-left) !important;
     }
@@ -54,15 +72,15 @@
 {% endif %}
 <div class="page page-center">
   <div class="container-tight py-4">
-    <form class="card card-md border-0 {% if image_code %}login_window{% endif %}" action="/" method="post" autocomplete="off">
+    <form class="card card-md border-0 rounded-3 {% if image_code %}login_window{% else %}bg-dark text-white{% endif %}" action="/" method="post" autocomplete="off">
       <input type="hidden" name="next" value="{{ GoPage }}"/>
       <div class="card-body">
-        <div class="text-center mb-3">
+        <div class="text-center mb-4">
           <a href="/" class="navbar-brand navbar-brand-autodark">
-            <img src="../static/img/logo/logo-blue.png" height="60" alt="">
+            <img src="../static/img/logo/logo-blue.png" height="60" alt="NAStool">
           </a>
         </div>
-        <label class="form-label">用户名</label>
+        <label class="form-label">Username</label>
         <div class="input-icon mb-3">
             <span class="input-icon-addon">
               {{ SVG.user() }}
@@ -70,23 +88,23 @@
           <input type="text" name="username" class="form-control {% if err_msg %}is-invalid{% endif %}"
                  placeholder="admin" value="" autocomplete="off">
         </div>
-        <label class="form-label">密码</label>
-        <div class="input-icon">
+        <label class="form-label">Password</label>
+        <div class="input-icon mb-3">
             <span class="input-icon-addon">
               {{ SVG.keyboard() }}
             </span>
           <input type="password" class="form-control {% if err_msg %}is-invalid{% endif %}" name="password"
                  placeholder="password" autocomplete="off">
         </div>
-        <div class="invalid-feedback mb-3" id="login_retmsg" style="display:block">{{ err_msg }}</div>
-        <div class="mb-3">
+        <div class="invalid-feedback mb-3" id="login_retmsg" style="display:block; color: #ef4444;">{{ err_msg }}</div>
+        <div class="mb-4">
           <label class="form-check">
             <input type="checkbox" name="remember" class="form-check-input" checked/>
-            <span class="form-check-label">保持登录</span>
+            <span class="form-check-label">Remember Me</span>
           </label>
         </div>
         <div class="form-footer">
-          <button type="submit" class="btn btn-primary w-100">登录</button>
+          <button type="submit" class="btn btn-primary w-100 py-2" style="font-weight: 600; letter-spacing: 0.5px;">Sign In</button>
         </div>
       </div>
     </form>
@@ -95,5 +113,4 @@
 <script src="../static/js/tabler/tabler.min.js"></script>
 <script src="../static/js/tabler/demo.min.js"></script>
 </body>
-
 </html>
