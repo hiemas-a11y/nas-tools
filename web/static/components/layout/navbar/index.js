@@ -2,6 +2,31 @@ import { LayoutNavbarButton } from "./button.js"; export { LayoutNavbarButton };
 import { html, nothing, unsafeHTML } from "../../utility/lit-core.min.js";
 import {CustomElement, Golbal} from "../../utility/utility.js";
 
+// Automatic English localization map for system menu structures
+const MENU_TRANSLATIONS = {
+  // Main Navigation Sections
+  "我的媒体库": "My Library",
+  "正在观看": "Continue Watching",
+  "最新入库": "Recently Added",
+  "探索": "Discover",
+  "推荐": "Recommendations",
+  "服务": "Services",
+  "订阅管理": "Subscriptions",
+  "电影订阅": "Movie RSS",
+  "电视剧订阅": "TV Show RSS",
+  "下载管理": "Downloads",
+  "站点管理": "Site Management",
+  "媒体服务器": "Media Server",
+  "系统设置": "System Settings",
+  "基础设置": "Basic Settings",
+  "用户管理": "User Management",
+  "高级设置": "Advanced Settings",
+  "日志查看": "Log Viewer",
+  "工具箱": "Toolbox",
+  "资源搜索": "Search",
+  "历史记录": "History"
+};
+
 export class LayoutNavbar extends CustomElement {
   static properties = {
     navbar_list: {type: Array },
@@ -26,54 +51,69 @@ export class LayoutNavbar extends CustomElement {
     this._is_update = false;
     this._is_expand = false;
     this.classList.add("navbar","navbar-vertical","navbar-expand-lg","lit-navbar-fixed","lit-navbar","lit-navbar-hide-scrollbar");
-    // 加载菜单
+    
+    // Load and auto-translate menus
     Golbal.get_cache_or_ajax("get_user_menus", "usermenus", {},
       (ret) => {
         if (ret.code === 0) {
-          this.navbar_list = ret.menus;
+          // Pass the database menus through our translation mapper logic
+          this.navbar_list = ret.menus.map(menu => {
+            if (MENU_TRANSLATIONS[menu.name]) {
+              menu.name = MENU_TRANSLATIONS[menu.name];
+            }
+            if (menu.also && MENU_TRANSLATIONS[menu.also]) {
+              menu.also = MENU_TRANSLATIONS[menu.also];
+            }
+            if (menu.list) {
+              menu.list = menu.list.map(subItem => {
+                if (MENU_TRANSLATIONS[subItem.name]) {
+                  subItem.name = MENU_TRANSLATIONS[subItem.name];
+                }
+                return subItem;
+              });
+            }
+            return menu;
+          });
         }
       },false
     );
   }
 
   firstUpdated() {
-    // 初始化页面
     this._init_page();
   }
 
   _init_page() {
-    // 加载页面
     if (this.layout_gopage) {
       navmenu(this.layout_gopage);
     } else if (window.history.state?.page) {
       window_history_refresh();
     } else {
-      // 打开地址链锚点页面
       let page = this._get_page_from_url();
       if (page) {
         navmenu(page);
       } else {
-        // 打开第一个页面
-        const page = this.navbar_list[0].page ?? this.navbar_list[0].list[0].page
-        this._add_page_to_url(page);
-        navmenu(page);
+        const page = this.navbar_list[0]?.page ?? this.navbar_list[0]?.list?.[0]?.page;
+        if (page) {
+          this._add_page_to_url(page);
+          navmenu(page);
+        }
       }
-      // 默认展开探索
       if (!this._is_expand) {
         this.show_collapse("ranking");
       }
     }
 
-    // 删除logo动画 加点延迟切换体验好
+    // Smooth entry sequence animations
     setTimeout(() => {
-      document.querySelector("#logo_animation").remove();
+      const logoAnim = document.querySelector("#logo_animation");
+      if (logoAnim) logoAnim.remove();
       this.removeAttribute("hidden");
       document.querySelector("#page_content").removeAttribute("hidden");
       document.querySelector("#main_bottom_menubar").classList.remove('d-none');
       document.querySelector("layout-searchbar").removeAttribute("hidden");
     }, 200);
 
-    // 检查更新
     if (this.layout_userlevel > 1 && this.layout_useradmin === "1") {
       this._check_new_version();
     }
@@ -94,7 +134,6 @@ export class LayoutNavbar extends CustomElement {
         if (url) {
           this._update_url = url;
           this._update_appversion = ret.version;
-          // this._is_update = true;
         }
       }
     });
@@ -105,7 +144,6 @@ export class LayoutNavbar extends CustomElement {
     if (pages.length > 1) {
       return pages[pages.length - 1]
     }
-
   }
 
   _add_page_to_url(page){
@@ -147,7 +185,7 @@ export class LayoutNavbar extends CustomElement {
                 ${this.navbar_list.map((item, index) => ( html`
                   ${item.list?.length > 0
                   ? html`
-                    <button class="accordion-button lit-navbar-accordion-button collapsed ps-2 pe-1 py-2" style="font-size:1.1rem;" data-bs-toggle="collapse" data-bs-target="#lit-navbar-collapse-${index}" aria-expanded="false">
+                    <button class="accordion-button lit-navbar-accordion-button collapsed ps-2 pe-1 py-2" style="font-size:1.1rem; font-weight: 500;" data-bs-toggle="collapse" data-bs-target="#lit-navbar-collapse-${index}" aria-expanded="false">
                       ${item.also??item.name}
                     </button>
                     <div class="accordion-collapse collapse" id="lit-navbar-collapse-${index}">
@@ -158,31 +196,28 @@ export class LayoutNavbar extends CustomElement {
                 ))}
               </div>
               <div class="d-flex align-items-end">
-                ${html`
-                  <!-- 升级提示 -->
-                  <span class="d-flex flex-grow-1 justify-content-center border rounded-3 m-3 p-2 ${this._is_update ? "bg-yellow" : ""}">
-                    <a href=${this._update_url} class="${this._is_update ? "text-yellow-fg" : "text-muted"}" target="_blank" rel="noreferrer">
-                      <strong>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24"
-                            viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
-                            stroke-linejoin="round">
-                          <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                          <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path>
-                        </svg>
-                        ${!this._is_update ? this.layout_appversion : html`<del>${this.layout_appversion}</del>`}
-                      </strong>
-                    </a>
-                    ${this._is_update
-                    ? html`
-                      <svg xmlns="http://www.w3.org/2000/svg" class="cursor-pointer icon icon-tabler icon-tabler-arrow-big-up-lines-filled ms-2 text-red" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <span class="d-flex flex-grow-1 justify-content-center border rounded-3 m-3 p-2 ${this._is_update ? "bg-yellow" : ""}">
+                  <a href=${this._update_url} class="${this._is_update ? "text-yellow-fg" : "text-muted"}" target="_blank" rel="noreferrer">
+                    <strong>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24"
+                          viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                          stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M9 12h-3.586a1 1 0 0 1 -.707 -1.707l6.586 -6.586a1 1 0 0 1 1.414 0l6.586 6.586a1 1 0 0 1 -.707 1.707h-3.586v3h-6v-3z" fill="currentColor"></path>
-                        <path d="M9 21h6"></path>
-                        <path d="M9 18h6"></path>
-                      </svg>`
-                    : nothing }
-                  </span>
-                  ` }
+                        <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path>
+                      </svg>
+                      ${!this._is_update ? this.layout_appversion : html`<del>${this.layout_appversion}</del>`}
+                    </strong>
+                  </a>
+                  ${this._is_update
+                  ? html`
+                    <svg xmlns="http://www.w3.org/2000/svg" class="cursor-pointer icon icon-tabler icon-tabler-arrow-big-up-lines-filled ms-2 text-red" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                      <path d="M9 12h-3.586a1 1 0 0 1 -.707 -1.707l6.586 -6.586a1 1 0 0 1 1.414 0l6.586 6.586a1 1 0 0 1 -.707 1.707h-3.586v3h-6v-3z" fill="currentColor"></path>
+                      <path d="M9 21h6"></path>
+                      <path d="M9 18h6"></path>
+                    </svg>`
+                  : nothing }
+                </span>
               </div>
             </div>
           </div>
@@ -195,22 +230,17 @@ export class LayoutNavbar extends CustomElement {
     return html`
     <a class="nav-link lit-navbar-accordion-item${this._active_name === item.page ? "-active" : ""} my-1 p-2 ${child ? "ps-3" : "lit-navbar-accordion-button"}" 
       href="#${item.page}" data-bs-dismiss="offcanvas" aria-label="Close"
-      style="${child ? "font-size:1rem" : "font-size:1.1rem;"}"
+      style="${child ? "font-size:1rem" : "font-size:1.1rem; font-weight: 500;"}"
       data-lit-page=${item.page}
       @click=${ () => { 
         this._add_page_to_url(item.page);
         navmenu(item.page);
       }}>
-      <span class="nav-link-icon" ?hidden=${!child} style="color:var(--tblr-body-color);">
-        ${item.icon ? unsafeHTML(item.icon) : nothing}
-      </span>
-      <span class="nav-link-title">
-        ${item.also ?? item.name}
-      </span>
-    </a>`    
+      <span class="nav-link-icon" ?hidden=${!child} style="color:var(--tblr-body-color);"></span>
+      ${item.name}
+    </a>
+    `;
   }
-
 }
-
 
 window.customElements.define("layout-navbar", LayoutNavbar);
